@@ -1,1 +1,1 @@
-# dmvc-simple-app
+# dmvc library example app
