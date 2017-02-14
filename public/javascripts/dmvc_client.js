@@ -73,7 +73,43 @@
      * Client-side events & server commands handler
      * @constructor
      */
-    var EventProcessor = function() {
+    var EventProcessor = function(opt) {
+
+        opt = opt || {};
+
+        var self = this;
+        if(opt.async) {
+            if(!window.EventSource) {
+                console.error('Browser didn`t support EventSource!');
+                return;
+            }
+            var eventSource = new EventSource('/controllers');
+            eventSource.onopen = function(e) {
+                console.log("Connection opened");
+            };
+            eventSource.onerror = function(e) {
+                if (this.readyState == EventSource.CONNECTING) {
+                    console.log("Lost connection, try to reconnect...");
+                } else {
+                    console.log("Connection error: " + this.readyState);
+                }
+            };
+            eventSource.addEventListener('bye', function(e) {
+                //some custom event
+            }, false);
+            eventSource.onmessage = function(e) {
+                console.log('Message: ', e);
+                var data = JSON.parse(e.data);
+                console.log('Message data: ', data);
+                //self.trigger(data.command, data);
+
+                if(data.streamID) {
+                    self._streamID = data.streamID;
+                 }
+            };
+            console.log('stream: ', eventSource);
+
+        }
 
     };
     EventProcessor.prototype = {
@@ -84,6 +120,7 @@
          */
         notify: function(opt) {
             var self = this;
+            opt.streamID = this._streamID;
             $.post('/controllers', opt, function(resp) {
                 _.each(resp, function(item) {
                     self.trigger(item.command, item);
@@ -123,7 +160,7 @@
      * Using Backbone.Events
      */
     _.extend(EventProcessor.prototype, Backbone.Events);
-    var processor = new EventProcessor();
+    var processor = new EventProcessor({async: true});
 
     /**
      * Main View class

@@ -1,6 +1,6 @@
 var _ = require('underscore');
 
-var dMVC = require('dmvc');
+var dMVC = require('dmvc-async');
 
 dMVC.TaskModel = dMVC.Model.subClass({
 
